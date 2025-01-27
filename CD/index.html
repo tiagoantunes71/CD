@@ -80,6 +80,48 @@
                 await fetchAttractions();
             });
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+    const locationBtn = document.getElementById("use-location-btn");
+    const attractionsContainer = document.getElementById("attractions-container");
+
+    async function fetchAttractions() {
+        try {
+            const response = await fetch("http://localhost:3000/atracoes");
+            if (!response.ok) throw new Error("Erro ao buscar atrações");
+
+            const data = await response.json();
+
+            attractionsContainer.innerHTML = ""; // Limpa antes de renderizar
+
+            data.attractions.forEach((attraction) => {
+                const card = document.createElement("div");
+                card.className = "col-md-6";
+
+                card.innerHTML = `
+                    <div class="card">
+                        <img src="${attraction.photo}" class="card-img-top" alt="Imagem da atração" onerror="this.src='https://via.placeholder.com/150';">
+                        <div class="card-body">
+                            <h5 class="card-title">${attraction.name}</h5>
+                            <p class="card-text">${attraction.address}</p>
+                            <a href="https://foursquare.com/v/${attraction.id}" target="_blank" class="btn btn-primary">Ver Mais</a>
+                        </div>
+                    </div>
+                `;
+                attractionsContainer.appendChild(card);
+            });
+        } catch (error) {
+            console.error("Erro ao obter atrações:", error);
+            attractionsContainer.innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
+        }
+    }
+
+    locationBtn.addEventListener("click", async () => {
+        console.log("Botão clicado! Obtendo atrações...");
+        await fetchAttractions();
+    });
+});
+
     </script>
 </body>
 
