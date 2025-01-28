@@ -71,6 +71,9 @@ app.get("/atracoes", async (req, res) => {
 
         // Caso o utilizador forneça uma cidade
         if (req.query.cidade) {
+            const ipResponse = await fetch("https://api64.ipify.org?format=json");
+            const ipData = await ipResponse.json();
+            ip = ipData.ip;
             const cityName = req.query.cidade;
             const geoResponse = await fetch(
                 `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${process.env.OPENWEATHER_API_KEY}`
