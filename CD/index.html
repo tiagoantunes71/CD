@@ -38,10 +38,16 @@
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("search-btn").addEventListener("click", () => {
         const city = document.getElementById("city-input").value.trim();
-        fetchAttractions(city);
+        if (city) {
+            console.log("Buscando atrações para:", city);
+            fetchAttractions(city);
+        } else {
+            alert("Por favor, insira o nome de uma cidade.");
+        }
     });
 
     document.getElementById("use-location-btn").addEventListener("click", () => {
+        console.log("Buscando atrações pela localização...");
         fetchAttractions();
     });
 });
@@ -53,6 +59,7 @@ async function fetchAttractions(cityName = "") {
             url += `?cidade=${encodeURIComponent(cityName)}`;
         }
 
+        console.log("Requisição para:", url);
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -60,6 +67,7 @@ async function fetchAttractions(cityName = "") {
         }
 
         const data = await response.json();
+        console.log("Dados recebidos:", data);
 
         if (!data || !data.atracoes || !data.city || !data.temperatura) {
             throw new Error("Dados inválidos retornados pela API");
@@ -74,11 +82,15 @@ async function fetchAttractions(cityName = "") {
         attractionsContainer.innerHTML = "";
 
         data.atracoes.forEach((attraction) => {
+            const imageUrl = attraction.photo && attraction.photo.startsWith("http")
+                ? attraction.photo
+                : "https://via.placeholder.com/150";
+
             const card = document.createElement("div");
             card.className = "col-md-6";
             card.innerHTML = `
                 <div class="card">
-                    <img src="${attraction.photo}" class="card-img-top" alt="Imagem da atração">
+                    <img src="${imageUrl}" class="card-img-top" alt="Imagem da atração">
                     <div class="card-body">
                         <h5 class="card-title">${attraction.name}</h5>
                         <p class="card-text">${attraction.address}</p>
@@ -94,7 +106,6 @@ async function fetchAttractions(cityName = "") {
         document.getElementById("attractions-container").innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
     }
 }
-
 
     </script>
     

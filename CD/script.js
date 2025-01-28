@@ -42,27 +42,50 @@ const fetchWeather = async (lat, lon) => {
         return "Dados indisponíveis";
     }
 };
-
+//funçao para procurar atraçoes perto do utilizador
 app.get("/atracoes", async (req, res) => {
     try {
         let city, ip, lat, lon;
 
-        const ipResponse = await fetch("https://api64.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        ip = ipData.ip;
+        if (req.query.cidade) {
+            // O usuário digitou uma cidade, então buscamos as coordenadas dela
+            const cityName = req.query.cidade;
+            console.log(`Buscando coordenadas para: ${cityName}`);
+            
+            const geoResponse = await fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${process.env.OPENWEATHER_API_KEY}`);
+            const geoData = await geoResponse.json();
 
-        const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
-        const geoData = await geoResponse.json();
-        
-        if (geoData.status !== "success") {
-            return res.status(400).json({ error: "Não foi possível obter a localização" });
+            if (!geoData.length) {
+                console.log("Cidade não encontrada!");
+                return res.status(400).json({ error: "Cidade não encontrada" });
+            }
+
+            city = geoData[0].name;
+            lat = geoData[0].lat;
+            lon = geoData[0].lon;
+        } else {
+            // Se nenhuma cidade foi informada, usamos o IP do usuário
+            console.log("Nenhuma cidade fornecida, obtendo localização do IP...");
+            const ipResponse = await fetch("https://api64.ipify.org?format=json");
+            const ipData = await ipResponse.json();
+            ip = ipData.ip;
+
+            const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
+            const geoData = await geoResponse.json();
+
+            if (geoData.status !== "success") {
+                return res.status(400).json({ error: "Não foi possível obter a localização" });
+            }
+
+            city = geoData.city;
+            lat = geoData.lat;
+            lon = geoData.lon;
         }
 
-        city = geoData.city;
-        lat = geoData.lat;
-        lon = geoData.lon;
+        console.log(`Localização detectada: ${city}, lat:${lat}, lon:${lon}`);
 
         const temperature = await fetchWeather(lat, lon);
+        console.log(`Temperatura encontrada: ${temperature}`);
 
         const placesResponse = await fetch(
             `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=5000&categories=16000`,
@@ -80,6 +103,7 @@ app.get("/atracoes", async (req, res) => {
         }
 
         const placesData = await placesResponse.json();
+        console.log("Atrações recebidas:", placesData.results.length);
 
         const attractions = await Promise.all(
             placesData.results.map(async (place) => {
@@ -92,16 +116,9 @@ app.get("/atracoes", async (req, res) => {
             })
         );
 
-        const { error } = await supabase
-            .from("atracoes")
-            .insert([{ ip, city, latitude: lat, longitude: lon, atracoes: attractions }]);
+        console.log("Atrações processadas:", attractions.length);
 
-        if (error) {
-            console.error("Erro ao salvar no Supabase:", error.message);
-            return res.status(500).json({ error: "Erro ao salvar no banco de dados" });
-        }
-
-        res.json({ ip, city, latitude: lat, longitude: lon, atracoes: attractions, temperatura: temperature });
+        res.json({ city, latitude: lat, longitude: lon, atracoes: attractions, temperatura: temperature });
 
     } catch (error) {
         console.error("Erro no servidor:", error.message);
@@ -110,5 +127,5 @@ app.get("/atracoes", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor alojado na porta ${PORT}`);
 });
