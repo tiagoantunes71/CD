@@ -134,6 +134,15 @@ app.get("/atracoes", async (req, res) => {
             })
         );
 
+        const { error } = await supabase
+            .from("atracoes")
+            .insert([{ ip, city, latitude: lat, longitude: lon, atracoes: attractions }]);
+
+        if (error) {
+            console.error("Erro ao salvar no Supabase:", error.message);
+            return res.status(500).json({ error: "Erro ao salvar no banco de dados" });
+        }
+
         res.json({ city, latitude: lat, longitude: lon, atracoes: attractions, temperatura: temperature });
 
     } catch (error) {
