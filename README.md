@@ -99,3 +99,50 @@ Criação da tabela *atracoes* com as colunas id, ip, latitude, longitude, atrac
   - **atracoes**: Atrações turisticas perto da cidade do utilizador
   - **timestamp**: Data e hora de acesso do utilizador.
   - **city**: Cidade escolhida pelo utilizador.
+
+
+A API retornará uma resposta JSON no seguinte formato:
+```json
+{
+    "city": "Vila Nova de Famalicão",
+    "latitude": 41.4065175,
+    "longitude": -8.5187481,
+    "atracoes": [
+        {
+            "name": "Parque da Devesa",
+            "address": "Alameda Doutor Francisco Sá Carneiro, 4760-286 Vila Nova de Famalicão",
+            "photo": "https://fastly.4sqi.net/img/general/original/1390919135_0qP_htH80ntEkzlh0c53rI5iPE_K0RgYH6MnqIulPyM.jpg"
+        },
+        {
+            "name": "Parque Sagres",
+            "address": "Rua Luís Barroso, Vila Nova de Famalicão",
+            "photo": "https://fastly.4sqi.net/img/general/original/89551307_Me-9pnF3APqDSP63yTCCbyqw6Ml5PoV9_RsH_s7-QrU.jpg"
+        },
+        {
+            "name": "Parque 1° de Maio",
+            "address": "Morada não disponível",
+            "photo": "https://fastly.4sqi.net/img/general/original/40889435_5cx1_GjUYlTYRRmEg_8BmKTnFgwdUCaKH_Vc_O53AJY.jpg"
+        },
+        {
+            "name": "Parque de Sinçães",
+            "address": "Avenida Carlos Bacelar, Vila Nova de Famalicão",
+            "photo": "https://fastly.4sqi.net/img/general/original/81939712_JNEq9LoVBkGgCa2rlEAVR5Oghm2rtEJtJAPd2m7g4WU.jpg"
+        },
+        {
+            "name": "ciclovia Vnf",
+            "address": "Morada não disponível",
+            "photo": "https://fastly.4sqi.net/img/general/original/2190146_TDFXzTrAv_U7xAXo98QpWR6kwQiL6rBeTj8Tiu59jtE.jpg"
+        },
+        {
+            "name": "Quinta da Praia",
+            "address": "Morada não disponível",
+            "photo": "https://fastly.4sqi.net/img/general/original/42641717_9qxqLH_2cyChKqviZmaZLiSSgJU4afQW0LvXHJyIVtw.jpg"
+        },
+        {
+            "name": "Monte do Facho",
+            "address": "Vila Nova de Famalicão",
+            "photo": "https://fastly.4sqi.net/img/general/original/23115477_LfbER_nWU0P4VnOJ9EWeot0EAZn2rMzN7gjyKjZe2Fc.jpg"
+        }
+    ],
+    "temperatura": "🌧️ 10.2°C, chuva fraca"
+}
