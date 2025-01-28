@@ -11,8 +11,8 @@ body {
 .card-img-top {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
-  max-width: 100%;  /* Garante que a imagem não ultrapasse a largura do card */
-  height: 500px;    /* Ajuste a altura da imagem conforme necessário */
+  max-width: 100%;
+  height: 500px;
   object-fit: cover;
 }
 #weather-info {

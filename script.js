@@ -29,7 +29,7 @@ const weatherEmojiMap = {
     Tornado: "🌪️"
 };
 
-// Função para buscar a temperatura e adicionar emoji correspondente
+// Função para procurar a temperatura e adicionar emoji correspondente
 const fetchWeather = async (lat, lon) => {
     try {
         const response = await fetch(
@@ -50,7 +50,7 @@ const fetchWeather = async (lat, lon) => {
     }
 };
 
-// Função para buscar imagens do Foursquare
+// Função para procurar imagens do Foursquare
 const fetchFoursquareImage = async (fsq_id) => {
     try {
         const response = await fetch(`https://api.foursquare.com/v3/places/${fsq_id}/photos`, {
@@ -71,11 +71,11 @@ const fetchFoursquareImage = async (fsq_id) => {
         if (photos.length > 0) {
             return `${photos[0].prefix}original${photos[0].suffix}`;
         } else {
-            return "default-placeholder.jpg"; // Fallback se não houver fotos
+            return null; // Retorna null se não houver fotos
         }
     } catch (error) {
-        console.error("Erro ao buscar imagem do Foursquare:", error);
-        return "default-placeholder.jpg"; // Retorna um placeholder caso haja erro
+        console.error("Erro ao procurar imagem do Foursquare:", error);
+        return null; // Retorna null em caso de erro
     }
 };
 
@@ -86,6 +86,7 @@ app.get("/atracoes", async (req, res) => {
         const ipResponse = await fetch("https://api64.ipify.org?format=json");
         const ipData = await ipResponse.json();
         ip = ipData.ip;
+
         // Caso o utilizador forneça uma cidade
         if (req.query.cidade) {
             const cityName = req.query.cidade;
@@ -103,10 +104,6 @@ app.get("/atracoes", async (req, res) => {
             lon = geoData[0].lon;
         } else {
             // Usar IP do utilizador caso nenhuma cidade seja fornecida
-            const ipResponse = await fetch("https://api64.ipify.org?format=json");
-            const ipData = await ipResponse.json();
-            ip = ipData.ip;
-
             const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
             const geoData = await geoResponse.json();
 
@@ -140,27 +137,36 @@ app.get("/atracoes", async (req, res) => {
 
         const placesData = await placesResponse.json();
 
+        // Filtrar e mapear as atrações com imagens válidas
         const attractions = await Promise.all(
             placesData.results.map(async (place) => {
-                const photoUrl = await fetchFoursquareImage(place.fsq_id); // Obtém a imagem correta
-                return {
-                    name: place.name || "Atração sem nome",
-                    address: place.location?.formatted_address || "Morada não disponível",
-                    photo: photoUrl
-                };
+                const photoUrl = await fetchFoursquareImage(place.fsq_id);
+                // Verifica se a atração tem imagem
+                if (photoUrl) {
+                    return {
+                        name: place.name || "Atração sem nome",
+                        address: place.location?.formatted_address || "Morada não disponível",
+                        photo: photoUrl
+                    };
+                }
+                return null; // Retorna null se não tiver foto
             })
         );
 
+        // Filtra as atrações para remover os itens sem imagem (null)
+        const validAttractions = attractions.filter(attraction => attraction !== null);
+
+        // Salvar no Supabase
         const { error } = await supabase
             .from("atracoes")
-            .insert([{ ip, city, latitude: lat, longitude: lon, atracoes: attractions }]);
+            .insert([{ ip, city, latitude: lat, longitude: lon, atracoes: validAttractions }]);
 
         if (error) {
             console.error("Erro ao salvar no Supabase:", error.message);
             return res.status(500).json({ error: "Erro ao salvar no banco de dados" });
         }
 
-        res.json({ city, latitude: lat, longitude: lon, atracoes: attractions, temperatura: temperature });
+        res.json({ city, latitude: lat, longitude: lon, atracoes: validAttractions, temperatura: temperature });
 
     } catch (error) {
         console.error("Erro no servidor:", error.message);
@@ -168,7 +174,7 @@ app.get("/atracoes", async (req, res) => {
     }
 });
 
-// Inicializar o servidor
+// Iniciar o servidor
 app.listen(PORT, () => {
     console.log(`Servidor hospedado na porta ${PORT}`);
 });
