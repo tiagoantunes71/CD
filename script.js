@@ -156,14 +156,14 @@ app.get("/atracoes", async (req, res) => {
         // Filtra as atrações para remover os itens sem imagem (null)
         const validAttractions = attractions.filter(attraction => attraction !== null);
 
-        // Salvar no Supabase
+        // Guardar no Supabase
         const { error } = await supabase
             .from("atracoes")
             .insert([{ ip, city, latitude: lat, longitude: lon, atracoes: validAttractions }]);
 
         if (error) {
-            console.error("Erro ao salvar no Supabase:", error.message);
-            return res.status(500).json({ error: "Erro ao salvar no banco de dados" });
+            console.error("Erro ao guardar no Supabase:", error.message);
+            return res.status(500).json({ error: "Erro ao guardar na base de dados" });
         }
 
         res.json({ city, latitude: lat, longitude: lon, atracoes: validAttractions, temperatura: temperature });
