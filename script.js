@@ -29,7 +29,7 @@ const weatherEmojiMap = {
     Tornado: "🌪️"
 };
 
-// Função para procurar a temperatura e adicionar emoji correspondente
+// Função para buscar a temperatura e adicionar emoji correspondente
 const fetchWeather = async (lat, lon) => {
     try {
         const response = await fetch(
@@ -50,17 +50,32 @@ const fetchWeather = async (lat, lon) => {
     }
 };
 
-// Função para procurar imagem do Unsplash
-const fetchUnsplashImage = async (query) => {
+// Função para buscar imagens do Foursquare
+const fetchFoursquareImage = async (fsq_id) => {
     try {
-        const response = await fetch(
-            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${process.env.UNSPLASH_ACCESS_KEY}`
-        );
-        const data = await response.json();
-        return data.results?.[0]?.urls?.regular || "https://via.placeholder.com/150";
+        const response = await fetch(`https://api.foursquare.com/v3/places/${fsq_id}/photos`, {
+            method: "GET",
+            headers: {
+                Authorization: process.env.FOURSQUARE_API_KEY,
+                Accept: "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao obter imagem do Foursquare para o ID ${fsq_id}`);
+        }
+
+        const photos = await response.json();
+        
+        // Verifica se há fotos disponíveis e constrói a URL correta
+        if (photos.length > 0) {
+            return `${photos[0].prefix}original${photos[0].suffix}`;
+        } else {
+            return "default-placeholder.jpg"; // Fallback se não houver fotos
+        }
     } catch (error) {
-        console.error("Erro ao procurar imagem no Unsplash:", error);
-        return "https://via.placeholder.com/150";
+        console.error("Erro ao buscar imagem do Foursquare:", error);
+        return "default-placeholder.jpg"; // Retorna um placeholder caso haja erro
     }
 };
 
@@ -68,12 +83,11 @@ const fetchUnsplashImage = async (query) => {
 app.get("/atracoes", async (req, res) => {
     try {
         let city, ip, lat, lon;
-
+        const ipResponse = await fetch("https://api64.ipify.org?format=json");
+        const ipData = await ipResponse.json();
+        ip = ipData.ip;
         // Caso o utilizador forneça uma cidade
         if (req.query.cidade) {
-            const ipResponse = await fetch("https://api64.ipify.org?format=json");
-            const ipData = await ipResponse.json();
-            ip = ipData.ip;
             const cityName = req.query.cidade;
             const geoResponse = await fetch(
                 `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${process.env.OPENWEATHER_API_KEY}`
@@ -128,7 +142,7 @@ app.get("/atracoes", async (req, res) => {
 
         const attractions = await Promise.all(
             placesData.results.map(async (place) => {
-                const photoUrl = await fetchUnsplashImage(place.name);
+                const photoUrl = await fetchFoursquareImage(place.fsq_id); // Obtém a imagem correta
                 return {
                     name: place.name || "Atração sem nome",
                     address: place.location?.formatted_address || "Morada não disponível",
