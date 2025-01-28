@@ -35,73 +35,66 @@
     </div>
 
     <script>
-       document.addEventListener("DOMContentLoaded", () => {
-    const locationBtn = document.getElementById("use-location-btn");
-    const searchBtn = document.getElementById("search-btn");
-    const cityInput = document.getElementById("city-input");
-    const attractionsContainer = document.getElementById("attractions-container");
-    const weatherContainer = document.getElementById("weather-container");
-
-    // Função para buscar as atrações e o clima
-    async function fetchAttractions(cityName = "") {
-        try {
-            let url = "http://localhost:3000/atracoes";
-            if (cityName) {
-                url += `?cidade=${encodeURIComponent(cityName)}`;
-            }
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Erro ao buscar atrações");
-
-            const data = await response.json();
-
-            // Exibe a temperatura e a cidade corretamente
-            weatherContainer.innerHTML = `
-                <h4>${data.city}, ${data.country}</h4>
-                <p class="fs-4">🌡️ ${data.temperature || "Não disponível"}</p>
-            `;
-
-            // Limpa e exibe as atrações
-            attractionsContainer.innerHTML = "";
-            data.attractions.forEach((attraction) => {
-                const card = document.createElement("div");
-                card.className = "col-md-6";
-                card.innerHTML = `
-                    <div class="card">
-                        <img src="${attraction.photo}" class="card-img-top" alt="Imagem da atração" onerror="this.src='https://via.placeholder.com/150';">
-                        <div class="card-body">
-                            <h5 class="card-title">${attraction.name}</h5>
-                            <p class="card-text">${attraction.address}</p>
-                            <a href="https://foursquare.com/v/${attraction.id}" target="_blank" class="btn btn-primary">Ver Mais</a>
-                        </div>
-                    </div>
-                `;
-                attractionsContainer.appendChild(card);
-            });
-        } catch (error) {
-            console.error("Erro ao obter atrações:", error);
-            weatherContainer.innerHTML = "<p class='text-danger'>Erro ao carregar clima.</p>";
-            attractionsContainer.innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
-        }
-    }
-
-    // Quando clicar no botão "Usar minha localização"
-    locationBtn.addEventListener("click", async () => {
-        console.log("Obtendo atrações e clima pela localização...");
-        await fetchAttractions(); // Não passa cidade, usa a localização do usuário
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("search-btn").addEventListener("click", () => {
+        const city = document.getElementById("city-input").value.trim();
+        fetchAttractions(city);
     });
 
-    // Quando clicar no botão "Search" para buscar uma cidade específica
-    searchBtn.addEventListener("click", async () => {
-        const cityName = cityInput.value.trim();
-        if (cityName) {
-            console.log(`Buscando dados para a cidade: ${cityName}...`);
-            await fetchAttractions(cityName); // Passa a cidade para a função
-        } else {
-            alert("Digite um nome de cidade para buscar.");
-        }
+    document.getElementById("use-location-btn").addEventListener("click", () => {
+        fetchAttractions();
     });
 });
+
+async function fetchAttractions(cityName = "") {
+    try {
+        let url = "http://localhost:3000/atracoes";
+        if (cityName) {
+            url += `?cidade=${encodeURIComponent(cityName)}`;
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Erro ao buscar atrações: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.atracoes || !data.city || !data.temperatura) {
+            throw new Error("Dados inválidos retornados pela API");
+        }
+
+        document.getElementById("weather-container").innerHTML = `
+            <h4>${data.city}</h4>
+            <p class="fs-4">${data.temperatura}</p>
+        `;
+
+        const attractionsContainer = document.getElementById("attractions-container");
+        attractionsContainer.innerHTML = "";
+
+        data.atracoes.forEach((attraction) => {
+            const card = document.createElement("div");
+            card.className = "col-md-6";
+            card.innerHTML = `
+                <div class="card">
+                    <img src="${attraction.photo}" class="card-img-top" alt="Imagem da atração">
+                    <div class="card-body">
+                        <h5 class="card-title">${attraction.name}</h5>
+                        <p class="card-text">${attraction.address}</p>
+                    </div>
+                </div>
+            `;
+            attractionsContainer.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Erro ao obter atrações:", error);
+        document.getElementById("weather-container").innerHTML = "<p class='text-danger'>Erro ao carregar clima.</p>";
+        document.getElementById("attractions-container").innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
+    }
+}
+
 
     </script>
     
