@@ -13,16 +13,20 @@
     <header class="mb-4">
         <h1 class="text-center">City Explorer</h1>
     </header>
+    
     <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="Enter a city name">
+        <input type="text" id="city-input" class="form-control" placeholder="Enter a city name">
         <button id="use-location-btn" class="btn btn-secondary">Use My Location</button>
-        <button class="btn btn-primary">Search</button>
+        <button id="search-btn" class="btn btn-primary">Search</button>
     </div>
+    
+    
     <div class="row">
         <div class="col-md-6">
             <h2>Weather</h2>
-            <div class="p-3 mb-3 bg-primary text-white rounded">Enter a city or use your location to see weather
-                information.</div>
+            <div id="weather-container" class="p-3 mb-3 bg-primary text-white rounded">
+                <p>Enter a city or use your location to see weather information.</p>
+            </div>
         </div>
         <div class="col-md-6">
             <h2>Nearby Attractions</h2>
@@ -30,74 +34,38 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const locationBtn = document.getElementById("use-location-btn");
-            const attractionsContainer = document.getElementById("attractions-container");
-
-            if (!locationBtn || !attractionsContainer) {
-                console.error("Elementos não encontrados no DOM.");
-                return;
-            }
-
-            async function fetchAttractions() {
-                try {
-                    const response = await fetch("http://localhost:3000/atracoes");
-                    if (!response.ok) throw new Error("Erro ao buscar atrações");
-
-                    const data = await response.json();
-                    attractionsContainer.innerHTML = "";
-
-                    data.attractions.forEach((attraction) => {
-                        const card = document.createElement("div");
-                        card.className = "col-md-6";
-
-                        //const photoUrl = attraction.photo || "https://via.placeholder.com/150";
-
-                        card.innerHTML = `
-                            <div class="card">
-                                
-                                <div class="card-body">
-                                <h5 class="card-title">${attraction}</h5>
-                                <p class="card-text">
-                                ${attraction.address || "Endereço não disponível"}
-                                </p>
-                            <a href="https://foursquare.com/v/${attraction.id}" target="_blank" class="btn btn-primary">Ver Mais</a>
-                            </div>
-                            </div>
-                            `;
-                        attractionsContainer.appendChild(card);
-                    });;
-                } catch (error) {
-                    console.error("Erro ao obter atrações:", error);
-                    attractionsContainer.innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
-                }
-            }
-
-            locationBtn.addEventListener("click", async () => {
-                console.log("Botão clicado! Obtendo atrações...");
-                await fetchAttractions();
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
+       document.addEventListener("DOMContentLoaded", () => {
     const locationBtn = document.getElementById("use-location-btn");
+    const searchBtn = document.getElementById("search-btn");
+    const cityInput = document.getElementById("city-input");
     const attractionsContainer = document.getElementById("attractions-container");
+    const weatherContainer = document.getElementById("weather-container");
 
-    async function fetchAttractions() {
+    // Função para buscar as atrações e o clima
+    async function fetchAttractions(cityName = "") {
         try {
-            const response = await fetch("http://localhost:3000/atracoes");
+            let url = "http://localhost:3000/atracoes";
+            if (cityName) {
+                url += `?cidade=${encodeURIComponent(cityName)}`;
+            }
+
+            const response = await fetch(url);
             if (!response.ok) throw new Error("Erro ao buscar atrações");
 
             const data = await response.json();
 
-            attractionsContainer.innerHTML = ""; // Limpa antes de renderizar
+            // Exibe a temperatura e a cidade corretamente
+            weatherContainer.innerHTML = `
+                <h4>${data.city}, ${data.country}</h4>
+                <p class="fs-4">🌡️ ${data.temperature || "Não disponível"}</p>
+            `;
 
+            // Limpa e exibe as atrações
+            attractionsContainer.innerHTML = "";
             data.attractions.forEach((attraction) => {
                 const card = document.createElement("div");
                 card.className = "col-md-6";
-
                 card.innerHTML = `
                     <div class="card">
                         <img src="${attraction.photo}" class="card-img-top" alt="Imagem da atração" onerror="this.src='https://via.placeholder.com/150';">
@@ -112,17 +80,32 @@
             });
         } catch (error) {
             console.error("Erro ao obter atrações:", error);
+            weatherContainer.innerHTML = "<p class='text-danger'>Erro ao carregar clima.</p>";
             attractionsContainer.innerHTML = "<p class='text-danger'>Erro ao carregar atrações.</p>";
         }
     }
 
+    // Quando clicar no botão "Usar minha localização"
     locationBtn.addEventListener("click", async () => {
-        console.log("Botão clicado! Obtendo atrações...");
-        await fetchAttractions();
+        console.log("Obtendo atrações e clima pela localização...");
+        await fetchAttractions(); // Não passa cidade, usa a localização do usuário
+    });
+
+    // Quando clicar no botão "Search" para buscar uma cidade específica
+    searchBtn.addEventListener("click", async () => {
+        const cityName = cityInput.value.trim();
+        if (cityName) {
+            console.log(`Buscando dados para a cidade: ${cityName}...`);
+            await fetchAttractions(cityName); // Passa a cidade para a função
+        } else {
+            alert("Digite um nome de cidade para buscar.");
+        }
     });
 });
 
     </script>
+    
+    
 </body>
 
 </html>
