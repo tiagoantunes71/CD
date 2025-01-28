@@ -19,7 +19,6 @@ Este projeto utiliza as seguintes tecnologias:
 A estrutura básica do projeto é a seguinte:
 
 ```
-CD/
 ├── index.html
 ├── styles.css
 ├── script.js
@@ -58,19 +57,13 @@ Para configurar o ambiente de desenvolvimento, siga os passos abaixo:
    git clone https://github.com/tiagoantunes71/CD.git
    ```
 
-2. **Navegue até o diretório do projeto:**
-
-   ```bash
-   cd CD
-   ```
-
-3. **Se estiver a utilizar Docker, construa a imagem:**
+2. **Se estiver a utilizar Docker, construa a imagem:**
 
    ```bash
    docker build -t cityexplorer .
    ```
 
-4. **Execute o container:**
+3. **Execute o contentor:**
 
    ```bash
    docker run -p 3000:3000 cityexplorer
@@ -81,7 +74,7 @@ Para configurar o ambiente de desenvolvimento, siga os passos abaixo:
 ## Uso
 
 1. **Abrir o terminal**
-2. **Execute o container:**
+2. **Execute o contentor:**
 
    ```bash
    docker run -p 3000:3000 cityexplorer
