@@ -10,8 +10,50 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Inicialização do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// Mapeamento de condições climáticas para emojis
+const weatherEmojiMap = {
+    Clear: "☀️", // Céu limpo
+    Clouds: "☁️", // Nublado
+    Rain: "🌧️", // Chuva
+    Drizzle: "🌦️", // Garoa
+    Thunderstorm: "⛈️", // Tempestade
+    Snow: "❄️", // Neve
+    Mist: "🌫️", // Névoa
+    Smoke: "💨", // Fumaça
+    Haze: "🌤️", // Névoa seca
+    Dust: "🌪️", // Poeira
+    Fog: "🌫️", // Nevoeiro
+    Sand: "🏜️", // Areia
+    Ash: "🌋", // Cinzas vulcânicas
+    Squall: "💨", // Rajadas de vento
+    Tornado: "🌪️" // Tornado
+};
+
+// Função para buscar a temperatura e adicionar emoji correspondente
+const fetchWeather = async (lat, lon) => {
+    try {
+        const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.OPENWEATHER_API_KEY}&lang=pt`
+        );
+        const data = await response.json();
+
+        if (data.weather && data.weather.length > 0 && data.main) {
+            const weatherCondition = data.weather[0].main; // Condição principal (ex: Clear, Rain)
+            const emoji = weatherEmojiMap[weatherCondition] || "🌍"; // Emoji correspondente ou padrão
+            return `${emoji} ${data.main.temp}°C, ${data.weather[0].description}`;
+        } else {
+            throw new Error("Não foi possível obter a condição climática.");
+        }
+    } catch (error) {
+        console.error("Erro ao buscar clima:", error);
+        return "Clima indisponível.";
+    }
+};
+
+// Função para buscar imagem do Unsplash
 const fetchUnsplashImage = async (query) => {
     try {
         const response = await fetch(
@@ -25,38 +67,20 @@ const fetchUnsplashImage = async (query) => {
     }
 };
 
-const fetchWeather = async (lat, lon) => {
-    try {
-        const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.OPENWEATHER_API_KEY}&lang=pt`
-        );
-        const data = await response.json();
-
-        if (data.main && data.main.temp !== undefined) {
-            return `${data.main.temp}°C, ${data.weather[0].description}`;
-        } else {
-            throw new Error("Temperatura não encontrada");
-        }
-    } catch (error) {
-        console.error("Erro ao buscar temperatura:", error);
-        return "Dados indisponíveis";
-    }
-};
-//funçao para procurar atraçoes perto do utilizador
+// Endpoint para buscar atrações e clima
 app.get("/atracoes", async (req, res) => {
     try {
         let city, ip, lat, lon;
 
+        // Caso o usuário forneça uma cidade
         if (req.query.cidade) {
-            // O usuário digitou uma cidade, então buscamos as coordenadas dela
             const cityName = req.query.cidade;
-            console.log(`Buscando coordenadas para: ${cityName}`);
-            
-            const geoResponse = await fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${process.env.OPENWEATHER_API_KEY}`);
+            const geoResponse = await fetch(
+                `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${process.env.OPENWEATHER_API_KEY}`
+            );
             const geoData = await geoResponse.json();
 
             if (!geoData.length) {
-                console.log("Cidade não encontrada!");
                 return res.status(400).json({ error: "Cidade não encontrada" });
             }
 
@@ -64,8 +88,7 @@ app.get("/atracoes", async (req, res) => {
             lat = geoData[0].lat;
             lon = geoData[0].lon;
         } else {
-            // Se nenhuma cidade foi informada, usamos o IP do usuário
-            console.log("Nenhuma cidade fornecida, obtendo localização do IP...");
+            // Usar IP do usuário caso nenhuma cidade seja fornecida
             const ipResponse = await fetch("https://api64.ipify.org?format=json");
             const ipData = await ipResponse.json();
             ip = ipData.ip;
@@ -82,11 +105,10 @@ app.get("/atracoes", async (req, res) => {
             lon = geoData.lon;
         }
 
-        console.log(`Localização detectada: ${city}, lat:${lat}, lon:${lon}`);
-
+        // Buscar clima com emoji
         const temperature = await fetchWeather(lat, lon);
-        console.log(`Temperatura encontrada: ${temperature}`);
 
+        // Buscar atrações próximas com a API Foursquare
         const placesResponse = await fetch(
             `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=5000&categories=16000`,
             {
@@ -103,7 +125,6 @@ app.get("/atracoes", async (req, res) => {
         }
 
         const placesData = await placesResponse.json();
-        console.log("Atrações recebidas:", placesData.results.length);
 
         const attractions = await Promise.all(
             placesData.results.map(async (place) => {
@@ -116,8 +137,6 @@ app.get("/atracoes", async (req, res) => {
             })
         );
 
-        console.log("Atrações processadas:", attractions.length);
-
         res.json({ city, latitude: lat, longitude: lon, atracoes: attractions, temperatura: temperature });
 
     } catch (error) {
@@ -126,6 +145,7 @@ app.get("/atracoes", async (req, res) => {
     }
 });
 
+// Inicializar o servidor
 app.listen(PORT, () => {
-    console.log(`Servidor alojado na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
