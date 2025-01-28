@@ -64,10 +64,16 @@ Para configurar o ambiente de desenvolvimento, siga os passos abaixo:
    docker build -t cityexplorer .
    ```
 
+2. **Caso queira usar a imagem do repositório original:**
+
+   ```bash
+   docker pull marcogomes05/city-explorer .
+   ```
+
 3. **Execute o contentor:**
 
    ```bash
-   docker run -p 3000:3000 cityexplorer
+   docker run -p 3000:3000 city-explorer
    ```
 
    A aplicação estará disponível em [http://localhost:3000](http://localhost:3000).
