@@ -16,17 +16,17 @@
     
     <div class="input-group mb-3">
         <input type="text" id="city-input" class="form-control" placeholder="Enter a city name">
-        <button id="use-location-btn" class="btn btn-secondary">Use My Location</button>
-        <button id="search-btn" class="btn btn-primary">Search</button>
+        <button id="use-location-btn" class="btn btn-secondary">Usar a minha localização</button>
+        <button id="search-btn" class="btn btn-primary">Procurar</button>
     </div>
     
     <div>
-        <h2>Weather</h2>
+        <h2>Meteorologia</h2>
         <div id="weather-container" class="p-3 mb-3 bg-primary text-white rounded">
-            <p>Enter a city or use your location to see weather information.</p>
+            <p>Procura uma cidade ou usa a tua localização</p>
         </div>
         
-        <h2>Nearby Attractions</h2>
+        <h2>Pontos turísticos</h2>
         <div id="attractions-container" class="row gy-4"></div>
     </div>
 
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("search-btn").addEventListener("click", () => {
         const city = document.getElementById("city-input").value.trim();
         if (city) {
-            console.log("Buscando atrações para:", city);
+            console.log("A procurar atrações para:", city);
             fetchAttractions(city);
         } else {
             alert("Por favor, insira o nome de uma cidade.");
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("use-location-btn").addEventListener("click", () => {
-        console.log("Buscando atrações pela localização...");
+        console.log("A procurar atrações pela localização...");
         fetchAttractions();
     });
 });
@@ -60,7 +60,7 @@ async function fetchAttractions(cityName = "") {
         const response = await fetch(url);
 
         if (!response.ok) {
-            throw new Error(`Erro ao buscar atrações: ${response.statusText}`);
+            throw new Error(`Erro ao procurar atrações: ${response.statusText}`);
         }
 
         const data = await response.json();

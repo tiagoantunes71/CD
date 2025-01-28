@@ -10,29 +10,26 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Inicialização do Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Mapeamento de condições climáticas para emojis
 const weatherEmojiMap = {
-    Clear: "☀️", // Céu limpo
-    Clouds: "☁️", // Nublado
-    Rain: "🌧️", // Chuva
-    Drizzle: "🌦️", // Garoa
-    Thunderstorm: "⛈️", // Tempestade
-    Snow: "❄️", // Neve
-    Mist: "🌫️", // Névoa
-    Smoke: "💨", // Fumaça
-    Haze: "🌤️", // Névoa seca
-    Dust: "🌪️", // Poeira
-    Fog: "🌫️", // Nevoeiro
-    Sand: "🏜️", // Areia
-    Ash: "🌋", // Cinzas vulcânicas
-    Squall: "💨", // Rajadas de vento
-    Tornado: "🌪️" // Tornado
+    Clear: "☀️", 
+    Clouds: "☁️", 
+    Rain: "🌧️", 
+    Drizzle: "🌦️",
+    Thunderstorm: "⛈️", 
+    Mist: "🌫️", 
+    Smoke: "💨", 
+    Haze: "🌤️", 
+    Dust: "🌪️", 
+    Fog: "🌫️", 
+    Sand: "🏜️", 
+    Ash: "🌋", 
+    Squall: "💨", 
+    Tornado: "🌪️"
 };
 
-// Função para buscar a temperatura e adicionar emoji correspondente
+// Função para procurar a temperatura e adicionar emoji correspondente
 const fetchWeather = async (lat, lon) => {
     try {
         const response = await fetch(
@@ -48,12 +45,12 @@ const fetchWeather = async (lat, lon) => {
             throw new Error("Não foi possível obter a condição climática.");
         }
     } catch (error) {
-        console.error("Erro ao buscar clima:", error);
-        return "Clima indisponível.";
+        console.error("Erro ao procurar informações sobre o clima:", error);
+        return "Dados indisponíveis.";
     }
 };
 
-// Função para buscar imagem do Unsplash
+// Função para procurar imagem do Unsplash
 const fetchUnsplashImage = async (query) => {
     try {
         const response = await fetch(
@@ -62,17 +59,17 @@ const fetchUnsplashImage = async (query) => {
         const data = await response.json();
         return data.results?.[0]?.urls?.regular || "https://via.placeholder.com/150";
     } catch (error) {
-        console.error("Erro ao buscar imagem no Unsplash:", error);
+        console.error("Erro ao procurar imagem no Unsplash:", error);
         return "https://via.placeholder.com/150";
     }
 };
 
-// Endpoint para buscar atrações e clima
+// Endpoint para procurar atrações e clima
 app.get("/atracoes", async (req, res) => {
     try {
         let city, ip, lat, lon;
 
-        // Caso o usuário forneça uma cidade
+        // Caso o utilizador forneça uma cidade
         if (req.query.cidade) {
             const cityName = req.query.cidade;
             const geoResponse = await fetch(
@@ -88,7 +85,7 @@ app.get("/atracoes", async (req, res) => {
             lat = geoData[0].lat;
             lon = geoData[0].lon;
         } else {
-            // Usar IP do usuário caso nenhuma cidade seja fornecida
+            // Usar IP do utilizador caso nenhuma cidade seja fornecida
             const ipResponse = await fetch("https://api64.ipify.org?format=json");
             const ipData = await ipResponse.json();
             ip = ipData.ip;
@@ -105,10 +102,10 @@ app.get("/atracoes", async (req, res) => {
             lon = geoData.lon;
         }
 
-        // Buscar clima com emoji
+        // Procurar clima com emoji
         const temperature = await fetchWeather(lat, lon);
 
-        // Buscar atrações próximas com a API Foursquare
+        // Procurar atrações próximas com a API Foursquare
         const placesResponse = await fetch(
             `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=5000&categories=16000`,
             {
@@ -121,7 +118,7 @@ app.get("/atracoes", async (req, res) => {
         );
 
         if (!placesResponse.ok) {
-            throw new Error("Erro ao buscar atrações na API do Foursquare");
+            throw new Error("Erro ao procurar atrações na API do Foursquare");
         }
 
         const placesData = await placesResponse.json();
@@ -131,7 +128,7 @@ app.get("/atracoes", async (req, res) => {
                 const photoUrl = await fetchUnsplashImage(place.name);
                 return {
                     name: place.name || "Atração sem nome",
-                    address: place.location?.formatted_address || "Endereço não disponível",
+                    address: place.location?.formatted_address || "Morada não disponível",
                     photo: photoUrl
                 };
             })
@@ -147,5 +144,5 @@ app.get("/atracoes", async (req, res) => {
 
 // Inicializar o servidor
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor hospedado na porta ${PORT}`);
 });
