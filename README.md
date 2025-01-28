@@ -9,6 +9,7 @@ Este projeto utiliza as seguintes tecnologias:
 
 - JavaScript
 - HTML
+- Bootstrap
 - CSS
 - Docker
 - Node.js
